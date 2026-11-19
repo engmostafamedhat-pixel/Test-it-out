@@ -1,0 +1,21 @@
+{
+  "name": "site-mission-reports",
+  "version": "1.0.0",
+  "description": "Offline-first mobile app (PWA) for site teams to file mission reports with photos, plus a back-office API and dashboard.",
+  "private": true,
+  "type": "module",
+  "main": "server/index.js",
+  "engines": {
+    "node": ">=22.13"
+  },
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js",
+    "test": "node --test test/*.test.js",
+    "test:e2e": "node test/e2e.mjs"
+  },
+  "dependencies": {
+    "express": "^5.1.0",
+    "multer": "^2.0.2"
+  }
+}
