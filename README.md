@@ -27,6 +27,10 @@ Mobile app for site teams to file mission reports with photo evidence, built for
 
 ## Quick start
 
+**Windows:** double-click `start-server.cmd`. On first run it installs dependencies. It asks for the access token, prints the addresses for the PC and phone, and starts the server. Because it runs in cmd, the PowerShell script policy that blocks `npm` does not apply.
+
+**Any OS:**
+
 ```bash
 npm install
 API_TOKEN=change-me npm start        # http://localhost:3000
