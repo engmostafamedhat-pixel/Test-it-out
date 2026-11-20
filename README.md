@@ -18,6 +18,11 @@ Mobile app for site teams to file mission reports with photo evidence, built for
 - **Offline-first**: the app shell is cached by a service worker. Reports and photos are stored in IndexedDB. Submitted reports go to an outbox and upload automatically when a connection is available (on reconnect, when the app regains focus, and every 60 s). Drafts save themselves while you type.
 - **No duplicate reports**: the report ID is generated on the device, and the server treats a repeated ID as already received. A retry after a dropped connection therefore cannot create a second copy.
 - **Storage hygiene**: after the server confirms receipt, full-size images are removed from the phone and thumbnails are kept.
+- **iPhone safeguards**:
+  - Opened in a Safari tab, the app shows step-by-step install instructions. It warns that data created in a Safari tab stays separate from the installed app.
+  - Reports left unsent for more than 8 hours trigger a red warning.
+  - The home-screen icon can show a count of unsent reports.
+  - The app resumes syncing as soon as it is brought back to the foreground.
 - Validation happens on the device and again on the server. Reports the server rejects are marked "Rejected" with the reason and can be corrected and resent.
 
 ## Quick start
@@ -69,7 +74,7 @@ Auth: `Authorization: Bearer <API_TOKEN>`, or `?token=` for browser links.
 | R1 | One shared token; no individual identity | No individual accountability or revocation; the technician name is typed in by the user | Constant-time token check; the token is kept in session storage for the dashboard | Integrate corporate SSO (Entra ID / OIDC) with field and office roles before go-live |
 | R2 | Single server with local disk storage | Loss of the evidence archive | SQLite in WAL mode, with files grouped per report | Schedule backups of `DATA_DIR`, or move photos to object storage (S3/Azure Blob). Define the retention period per contract. |
 | R3 | Data left on the phone if it is lost before sync | Lost reports, or exposure of client site data | Data persists until confirmed; `navigator.storage.persist()` is requested | Require MDM-managed devices. Instruct teams to sync before leaving the site. |
-| R4 | iOS clears PWA storage after long inactivity, and iOS has no background sync | Unsent reports lost on rarely used iPhones | Sync runs when the app is opened or regains focus | Sync before leaving the site. If iOS is the main platform, plan a wrapped native build (Capacitor). |
+| R4 | iOS has no background sync; iOS can clear storage of a web app that goes unused for a long period | Unsent reports lost on rarely used iPhones | Install guide shown in Safari tabs; red warning for reports unsent after 8 h; unsent count on the app icon (iOS 16.4+, after notification permission); sync when the app is resumed or regains focus; storage-protection status shown in Settings | Sync before leaving site. If iPhones are the main platform, build the native iOS wrapper (Capacitor) |
 | R5 | Photos of critical infrastructure (substation layouts, protection settings) | Security and regulatory exposure (NERC CIP / IEC 62443 / national CI rules) | Files are served only with the token; there are no public URLs | Have the client's cybersecurity function classify the data. Host on approved infrastructure only. |
 | R6 | Free-text fields only, with no structured test results | Weak analytics | Search and CSV export are available | Phase 2: structured checklists per mission type (ITP/test-sheet templates) |
 

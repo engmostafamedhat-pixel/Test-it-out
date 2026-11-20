@@ -2,6 +2,9 @@ import { store } from './store.js';
 import { settings } from './settings.js';
 import { processPhoto } from './photos.js';
 import { syncNow, startAutoSync, onSyncChange, isSyncing } from './sync.js';
+import { isIOS, isStandalone, setBadge, badgeSupported, requestBadgePermission, storagePersisted } from './platform.js';
+
+const STALE_HOURS = 8; // an unsent report older than one shift gets a red warning
 
 const DEFAULT_MISSION_TYPES = [
   'Site Survey', 'Installation', 'Pre-Commissioning', 'Commissioning / SAT', 'FAT',
@@ -71,6 +74,7 @@ function options(list, selected) {
 
 async function updateNet() {
   const pending = (await store.listReports()).filter((r) => r.state === 'outbox').length;
+  setBadge(pending);
   const online = navigator.onLine;
   $net.classList.toggle('off', !online);
   $net.textContent = !online
@@ -121,14 +125,33 @@ async function renderHome() {
     </a></li>`;
   }));
 
+  const queued = all.filter((r) => r.state === 'outbox');
+  const staleCutoff = Date.now() - STALE_HOURS * 3600_000;
+  const stale = queued.filter((r) => Date.parse(r.submittedAt || r.updatedAt) < staleCutoff);
+  const oldest = stale.reduce((min, r) => Math.min(min, Date.parse(r.submittedAt || r.updatedAt)), Infinity);
+
   $view.innerHTML = `
+    ${isIOS() && !isStandalone() ? `<div class="card warn" id="ios-install">
+      <strong>Install this app before use.</strong>
+      <ol>
+        <li>Tap the <b>Share</b> button <span aria-hidden="true">(square with arrow)</span> in the Safari toolbar.</li>
+        <li>Choose <b>Add to Home Screen</b>, then <b>Add</b>.</li>
+        <li>Close Safari and open <b>Site Reports</b> from the home screen.</li>
+      </ol>
+      <p class="hint">Reports created in this Safari tab are stored separately and will not appear in the installed app.</p>
+    </div>` : ''}
+    ${stale.length ? `<div class="card alert" id="stale">
+      <strong>${stale.length} report${stale.length === 1 ? '' : 's'} not sent since ${esc(fmtDate(new Date(oldest).toISOString()))}.</strong>
+      <p class="hint">They exist only on this phone. Get signal (mobile data or office Wi-Fi), keep this app open, and tap Send.</p>
+    </div>` : ''}
     ${!s.technician_name ? `<div class="card"><strong>Set up your profile.</strong> Add your name and the server details once in <a href="#/settings">Settings</a>; every new report is pre-filled from it.</div>` : ''}
     <div class="tabs" role="group" aria-label="Filter reports">
       <button data-tab="active" aria-pressed="${homeTab === 'active'}">In progress (${groups.active.length})</button>
       <button data-tab="sent" aria-pressed="${homeTab === 'sent'}">Sent (${groups.sent.length})</button>
     </div>
-    ${groups.active.some((r) => r.state === 'outbox') && navigator.onLine
-      ? '<button class="btn block" id="sync" style="margin-bottom:12px">Send queued reports now</button>' : ''}
+    ${queued.length
+      ? `<button class="btn ${stale.length ? 'primary' : ''} block" id="sync" style="margin-bottom:12px" ${navigator.onLine ? '' : 'disabled'}>
+          ${navigator.onLine ? `Send ${queued.length} queued report${queued.length === 1 ? '' : 's'} now` : 'No connection – reports will send when signal returns'}</button>` : ''}
     ${items.length ? `<ul class="list">${items.join('')}</ul>`
       : `<div class="empty">${homeTab === 'active' ? 'No reports in progress.' : 'Nothing sent from this device yet.'}</div>`}
     <a href="#/new" class="btn primary fab">+ New mission report</a>`;
@@ -487,6 +510,11 @@ function renderSettings() {
         <label for="f-stamp" style="margin:0">Stamp date, site and GPS on photos</label>
         <input type="checkbox" id="f-stamp" ${s.stampPhotos ? 'checked' : ''}>
       </div>
+      ${badgeSupported() ? `<div class="switch" style="margin-top:12px">
+        <label style="margin:0">Unsent count on app icon <span class="hint">${isIOS() ? 'iPhone asks for notification permission' : ''}</span></label>
+        <button type="button" class="btn" id="badge">Enable</button>
+      </div>` : ''}
+      <p class="hint" id="device-status"></p>
       <div style="display:flex;gap:10px;margin-top:18px">
         <button type="button" class="btn" id="test">Test connection</button>
         <button type="submit" class="btn primary" style="flex:1">Save</button>
@@ -496,6 +524,28 @@ function renderSettings() {
     <p class="hint">Install: in the browser menu choose “Add to Home screen” / “Install app”. Reports and photos are stored on this device until the server confirms receipt.</p>`;
 
   const f = $view.querySelector('#sf');
+  const $badge = $view.querySelector('#badge');
+  const refreshBadgeBtn = () => {
+    if (!$badge) return;
+    const granted = !('Notification' in window) || Notification.permission === 'granted';
+    $badge.textContent = granted ? 'On' : 'Enable';
+    $badge.disabled = granted;
+  };
+  refreshBadgeBtn();
+  $badge?.addEventListener('click', async () => {
+    const result = await requestBadgePermission();
+    if (result === 'denied') toast('Permission denied. Enable notifications for Site Reports in phone Settings.', 4000);
+    refreshBadgeBtn();
+    updateNet();
+  });
+  storagePersisted().then((persisted) => {
+    const lines = [
+      `Mode: ${isStandalone() ? 'installed app' : 'browser tab'}`,
+      persisted === null ? '' : `Storage: ${persisted ? 'protected from automatic clean-up' : 'not protected (browser may clear it if the phone runs low on space)'}`,
+    ].filter(Boolean);
+    const out = $view.querySelector('#device-status');
+    if (out) out.textContent = lines.join(' · ');
+  });
   const values = () => ({
     technician_name: f.elements.technician_name.value.trim(),
     technician_id: f.elements.technician_id.value.trim(),
@@ -538,6 +588,10 @@ onSyncChange(async () => {
 });
 window.addEventListener('online', updateNet);
 window.addEventListener('offline', updateNet);
+// iOS resumes home-screen apps from memory without a reload; 'pageshow' and
+// 'focus' are the reliable signals there that the user is back in the app.
+window.addEventListener('pageshow', () => { syncNow(); updateNet(); });
+window.addEventListener('focus', () => syncNow());
 
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js').catch((err) => console.warn('SW registration failed', err));

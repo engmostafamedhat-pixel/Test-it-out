@@ -1,9 +1,9 @@
 // Service worker: caches the app shell so the field app opens with no signal.
 // API calls are never cached; the outbox in IndexedDB handles offline uploads.
-const VERSION = 'v1.0.0';
+const VERSION = 'v1.1.0';
 const SHELL = [
   './', 'index.html', 'css/app.css', 'manifest.webmanifest',
-  'js/app.js', 'js/store.js', 'js/photos.js', 'js/sync.js', 'js/settings.js',
+  'js/app.js', 'js/store.js', 'js/photos.js', 'js/sync.js', 'js/settings.js', 'js/platform.js',
   'icons/icon.svg', 'icons/icon-192.png', 'icons/icon-512.png',
 ];
 

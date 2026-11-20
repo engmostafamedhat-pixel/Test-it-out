@@ -126,6 +126,28 @@ if (shotsDir) {
   await p3.screenshot({ path: path.join(shotsDir, '07-dashboard.png') });
 }
 
+// 4) iPhone in a Safari tab: install instructions shown; stale unsent report flagged
+const ios = await browser.newContext({ ...devices['iPhone 14'] });
+const ip = await ios.newPage();
+ip.on('pageerror', (e) => { throw e; });
+await ip.goto(base + '/');
+await ip.waitForSelector('#ios-install');
+await ios.setOffline(true);
+await ip.evaluate(async () => {
+  const db = await new Promise((r) => { const q = indexedDB.open('mission-reports'); q.onsuccess = () => r(q.result); });
+  const old = new Date(Date.now() - 26 * 3600_000).toISOString();
+  await new Promise((r) => {
+    const t = db.transaction('reports', 'readwrite');
+    t.objectStore('reports').put({ id: crypto.randomUUID(), state: 'outbox', site: 'Substation 33kV Charlie', submittedAt: old, updatedAt: old });
+    t.oncomplete = r;
+  });
+});
+await ip.reload();
+await ip.waitForSelector('#stale');
+assert.match(await ip.textContent('#sync'), /No connection/);
+if (shotsDir) await ip.screenshot({ path: path.join(shotsDir, '08-iphone-safari.png') });
+await ios.close();
+
 await browser.close();
 server.close();
 fs.rmSync(dataDir, { recursive: true, force: true });
