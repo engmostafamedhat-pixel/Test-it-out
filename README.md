@@ -11,7 +11,7 @@ Mobile app for site teams to file mission reports with photo evidence, built for
 
 ## Field app capabilities
 
-- **Report form**: project, site/substation, bay/panel/asset, mission type (Survey, Installation, Pre-Commissioning, SAT, FAT, PM/CM, Fault Investigation, Upgrade, Training), start/end time, lead technician, team, outcome (Completed / Partially / On Hold / Blocked), work performed, findings/measurements, issues/NCRs, next actions, Permit-to-Work number, HSE observations.
+- **Report form**: project, site/substation, bay/panel/asset, mission type (Survey, Installation, Pre-Commissioning, SAT, FAT, PM/CM, Fault Investigation, Upgrade, Training), start/end time, lead engineer, team, outcome (Completed / Partially / On Hold / Blocked), work performed, findings/measurements, issues/NCRs, next actions, Permit-to-Work number, HSE observations.
 - **Photos**: camera capture or gallery, caption per photo, removal. Each photo is orientation-corrected, downscaled to 1920 px and compressed on the device (12 MP, 4–8 MB → about 300–600 KB). Date, site/asset and GPS are optionally stamped into the image, so the evidence stays with the photo after it is exported.
 - **GPS capture** with stated accuracy.
 - **Client/supervisor acknowledgement**: name, role, finger signature.
@@ -75,7 +75,7 @@ Auth: `Authorization: Bearer <API_TOKEN>`, or `?token=` for browser links.
 
 | # | Risk | Impact | Mitigation in this build | Action required |
 |---|---|---|---|---|
-| R1 | One shared token; no individual identity | No individual accountability or revocation; the technician name is typed in by the user | Constant-time token check; the token is kept in session storage for the dashboard | Integrate corporate SSO (Entra ID / OIDC) with field and office roles before go-live |
+| R1 | One shared token; no individual identity | No individual accountability or revocation; the lead engineer name is typed in by the user | Constant-time token check; the token is kept in session storage for the dashboard | Integrate corporate SSO (Entra ID / OIDC) with field and office roles before go-live |
 | R2 | Single server with local disk storage | Loss of the evidence archive | SQLite in WAL mode, with files grouped per report | Schedule backups of `DATA_DIR`, or move photos to object storage (S3/Azure Blob). Define the retention period per contract. |
 | R3 | Data left on the phone if it is lost before sync | Lost reports, or exposure of client site data | Data persists until confirmed; `navigator.storage.persist()` is requested | Require MDM-managed devices. Instruct teams to sync before leaving the site. |
 | R4 | iOS has no background sync; iOS can clear storage of a web app that goes unused for a long period | Unsent reports lost on rarely used iPhones | Install guide shown in Safari tabs; red warning for reports unsent after 8 h; unsent count on the app icon (iOS 16.4+, after notification permission); sync when the app is resumed or regains focus; storage-protection status shown in Settings | Sync before leaving site. If iPhones are the main platform, build the native iOS wrapper (Capacitor) |

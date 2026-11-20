@@ -49,7 +49,7 @@ function validateReport(input) {
     r[f] = ['lat', 'lng', 'gps_accuracy'].includes(f) ? num(input[f]) : str(input[f]);
   }
   for (const f of ['project', 'site', 'mission_type', 'status', 'technician_name', 'work_performed']) {
-    if (!r[f]) errors.push(`${f} is required`);
+    if (!r[f]) errors.push(`${f === 'technician_name' ? 'lead engineer' : f} is required`);
   }
   if (r.mission_type && !MISSION_TYPES.includes(r.mission_type)) errors.push('mission_type is invalid');
   if (r.status && !STATUSES.includes(r.status)) errors.push('status is invalid');
@@ -183,7 +183,8 @@ export function createApp({ dataDir, apiToken = process.env.API_TOKEN || '' } = 
       if (/^[=+\-@]/.test(s)) s = "'" + s; // neutralise spreadsheet formula injection
       return /[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
     };
-    const csv = [cols.join(','), ...rows.map((r) => cols.map((c) => esc(r[c])).join(','))].join('\r\n');
+    const header = cols.map((c) => ({ technician_name: 'lead_engineer', technician_id: 'lead_engineer_id' })[c] || c);
+    const csv = [header.join(','), ...rows.map((r) => cols.map((c) => esc(r[c])).join(','))].join('\r\n');
     res.type('text/csv').attachment(`mission-reports-${new Date().toISOString().slice(0, 10)}.csv`).send(csv);
   });
 

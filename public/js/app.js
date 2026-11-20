@@ -216,7 +216,7 @@ async function renderForm(id) {
       <section class="card">
         <h2>Team & location</h2>
         <div class="row">
-          <div>${field('technician_name', 'Lead technician', r.technician_name, { req: true })}</div>
+          <div>${field('technician_name', 'Lead engineer', r.technician_name, { req: true })}</div>
           <div>${field('technician_id', 'Employee ID', r.technician_id)}</div>
         </div>
         ${field('team_members', 'Other team members', r.team_members, { hint: 'comma separated' })}
@@ -428,7 +428,7 @@ async function renderForm(id) {
     if (!report.site?.trim()) mark('site', 'Site / substation is required');
     if (!report.mission_type) mark('mission_type', 'Mission type is required');
     if (!report.start_time) mark('start_time', 'Start time is required');
-    if (!report.technician_name?.trim()) mark('technician_name', 'Lead technician is required');
+    if (!report.technician_name?.trim()) mark('technician_name', 'Lead engineer is required');
     if (!report.status) mark('status', 'Outcome is required');
     if (!report.work_performed?.trim()) mark('work_performed', 'Work performed is required');
     if (report.end_time && report.start_time && report.end_time < report.start_time) mark('end_time', 'End time is before start time');
@@ -470,7 +470,7 @@ async function renderDetail(id) {
       <dl class="kv">
         ${row('Project', r.project)}${row('Mission', r.mission_type)}${row('Outcome', r.status)}
         ${row('Start', fmtDate(r.start_time))}${row('End', fmtDate(r.end_time))}
-        ${row('Technician', r.technician_name)}${row('Team', r.team_members)}${row('PTW', r.ptw_number)}
+        ${row('Lead engineer', r.technician_name)}${row('Team', r.team_members)}${row('PTW', r.ptw_number)}
         ${row('Work', r.work_performed)}${row('Findings', r.findings)}${row('Issues', r.issues)}
         ${row('HSE', r.safety_notes)}${row('Next actions', r.next_actions)}
       </dl>

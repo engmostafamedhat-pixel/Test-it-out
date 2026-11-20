@@ -48,7 +48,7 @@ export function renderReportHtml(r, token = '') {
 <div class="actions"><button onclick="window.print()">Print / Save as PDF</button></div>
 <table>
   <tr><td>Mission type</td><td>${esc(r.mission_type)}</td><td>Status</td><td><span class="badge">${esc(r.status)}</span></td></tr>
-  <tr><td>Lead technician</td><td>${esc(r.technician_name)}${r.technician_id ? ` (${esc(r.technician_id)})` : ''}</td><td>Team</td><td>${esc(r.team_members) || '—'}</td></tr>
+  <tr><td>Lead engineer</td><td>${esc(r.technician_name)}${r.technician_id ? ` (${esc(r.technician_id)})` : ''}</td><td>Team</td><td>${esc(r.team_members) || '—'}</td></tr>
   <tr><td>Start</td><td>${fmt(r.start_time)}</td><td>End</td><td>${fmt(r.end_time)}</td></tr>
   <tr><td>Permit to Work</td><td>${esc(r.ptw_number) || '—'}</td><td>GPS</td><td>${gps}</td></tr>
   <tr><td>Report ID</td><td style="font-family:monospace;font-size:12px">${esc(r.id)}</td><td>Received</td><td>${fmt(r.received_at)}</td></tr>
