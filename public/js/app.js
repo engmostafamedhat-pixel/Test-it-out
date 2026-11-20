@@ -1,4 +1,4 @@
-import { store } from './store.js';
+import { store, uuid } from './store.js';
 import { settings } from './settings.js';
 import { processPhoto } from './photos.js';
 import { syncNow, startAutoSync, onSyncChange, isSyncing } from './sync.js';
@@ -165,7 +165,7 @@ async function renderHome() {
 async function newReport() {
   const s = settings.get();
   const report = {
-    id: crypto.randomUUID(),
+    id: uuid(),
     state: 'draft',
     createdAt: new Date().toISOString(),
     project: s.lastProject || '',
@@ -294,6 +294,7 @@ async function renderForm(id) {
   // --- GPS ---
   $view.querySelector('#gps').addEventListener('click', () => {
     const out = $view.querySelector('#gps-val');
+    if (!window.isSecureContext) { out.textContent = 'GPS needs a secure (https://) server address. Ask the project office.'; return; }
     if (!('geolocation' in navigator)) { out.textContent = 'GPS not available on this device'; return; }
     out.textContent = 'Acquiring…';
     navigator.geolocation.getCurrentPosition(
@@ -354,7 +355,7 @@ async function renderForm(id) {
         ].filter(Boolean) : null;
         const { blob, thumb } = await processPhoto(file, { stamp });
         await store.putPhoto({
-          id: crypto.randomUUID(), reportId: id, seq: ++seq, caption: '',
+          id: uuid(), reportId: id, seq: ++seq, caption: '',
           takenAt: takenAt.toISOString(), blob, thumb,
         });
       } catch (err) {
