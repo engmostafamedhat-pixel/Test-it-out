@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "deny": [
+      "mcp__superme",
+      "mcp__plugin_desktop-commander_desktop-commander"
+    ]
+  },
+  "skillOverrides": {
+    "superme:ask-how-others-handle-this": "off",
+    "superme:review-doc": "off",
+    "superme:choose-what-to-build": "off",
+    "superme:evaluate-metrics": "off",
+    "superme:fundraise": "off",
+    "superme:get-customers": "off",
+    "superme:hire-someone": "off",
+    "superme:set-pricing": "off",
+    "superme:validate-an-idea": "off"
+  }
+}
